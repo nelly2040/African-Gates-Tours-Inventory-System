@@ -1,0 +1,157 @@
+from flask import Flask, jsonify, request, render_template
+from flask_sqlalchemy import SQLAlchemy
+from datetime import date
+
+app = Flask(__name__)
+
+# Database Configuration
+# Replace 'mysql://username:2040245800nm,.@localhost/database_name' with your actual MySQL connection string
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:2040245800nm,.@localhost/yourdatabase'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+# Model for Tours
+class Tour(db.Model):
+    tour_id = db.Column(db.Integer, primary_key=True)
+    tour_name = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text)
+    price = db.Column(db.Float)
+    capacity = db.Column(db.Integer)
+    availability = db.Column(db.Date)
+    tour_type = db.Column(db.String(255))
+
+    def to_dict(self):
+        return {
+            'tour_id': self.tour_id,
+            'tour_name': self.tour_name,
+            'description': self.description,
+            'price': self.price,
+            'capacity': self.capacity,
+            'availability': self.availability.isoformat() if self.availability else None,
+            'tour_type': self.tour_type
+        }
+
+# Model for Customers
+class Customer(db.Model):
+    customer_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    address = db.Column(db.String(255))
+    email = db.Column(db.String(255))
+
+    def to_dict(self):
+        return {
+            'customer_id': self.customer_id,
+            'name': self.name,
+            'address': self.address,
+            'email': self.email
+        }
+
+# Model for Bookings
+class Booking(db.Model):
+    booking_id = db.Column(db.Integer, primary_key=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customer.customer_id'))
+    tour_id = db.Column(db.Integer, db.ForeignKey('tour.tour_id'))
+    booking_date = db.Column(db.Date, default=date.today)
+    num_people = db.Column(db.Integer)
+    customer = db.relationship('Customer', backref='bookings')
+    tour = db.relationship('Tour', backref='bookings')
+
+    def to_dict(self):
+        return {
+            'booking_id': self.booking_id,
+            'customer_id': self.customer_id,
+            'tour_id': self.tour_id,
+            'booking_date': self.booking_date.isoformat(),
+            'num_people': self.num_people,
+            'customer': self.customer.to_dict(),
+            'tour': self.tour.to_dict()
+        }
+
+# Model for Equipment
+class Equipment(db.Model):
+    equipment_id = db.Column(db.Integer, primary_key=True)
+    equipment_name = db.Column(db.String(255), nullable=False)
+    type = db.Column(db.String(255))
+    quantity = db.Column(db.Integer)
+    condition = db.Column(db.String(255))
+    rental_price = db.Column(db.Numeric(10, 2))
+
+    def to_dict(self):
+        return {
+            'equipment_id': self.equipment_id,
+            'equipment_name': self.equipment_name,
+            'type': self.type,
+            'quantity': self.quantity,
+            'condition': self.condition,
+            'rental_price': float(self.rental_price)
+        }
+
+# API Endpoint to get all tours
+@app.route('/api/tours')
+def get_tours():
+    tours = Tour.query.all()
+    return jsonify([tour.to_dict() for tour in tours])
+
+# API Endpoint to book a tour
+@app.route('/api/book', methods=['POST'])
+def book_tour():
+    data = request.get_json()
+    tour_id = data['tour_id']
+    customer_name = data['customer_name']
+    customer = Customer.query.filter_by(name=customer_name).first()
+    if not customer:
+        customer = Customer(name=customer_name, address=data.get('address'), email=data.get('email'))
+        db.session.add(customer)
+        db.session.commit()
+    booking = Booking(customer_id=customer.customer_id, tour_id=tour_id, num_people=data['num_people'])
+    db.session.add(booking)
+    db.session.commit()
+    return jsonify({'message': 'Booking successful', 'booking_id': booking.booking_id})
+
+# API Endpoint to generate an invoice
+@app.route('/api/invoice/<int:booking_id>')
+def generate_invoice(booking_id):
+    booking = Booking.query.get_or_404(booking_id)
+    customer = booking.customer
+    tour = booking.tour
+
+    # Generate invoice data as a dictionary
+    invoice_data = {
+        'company_name': 'African Gates Tours',
+        'invoice_number': booking.booking_id,
+        'invoice_date': booking.booking_date.isoformat(),
+        'customer_name': customer.name,
+        'customer_address': customer.address,
+        'items': [
+            {'name': tour.tour_name, 'quantity': booking.num_people, 'price': tour.price}
+        ],
+        # ... (Add other invoice details)
+    }
+
+    # Render the invoice template
+    return render_template('invoice.html', invoice=invoice_data)
+
+# API Endpoint to get all equipment
+@app.route('/api/equipment')
+def get_equipment():
+    equipment = Equipment.query.all()
+    return jsonify([item.to_dict() for item in equipment])
+
+# API Endpoint to add equipment
+@app.route('/api/equipment', methods=['POST'])
+def add_equipment():
+    data = request.get_json()
+    new_equipment = Equipment(
+        equipment_name=data['equipment_name'],
+        type=data['type'],
+        quantity=data['quantity'],
+        condition=data['condition'],
+        rental_price=data['rental_price']
+    )
+    db.session.add(new_equipment)
+    db.session.commit()
+    return jsonify({'message': 'Equipment added successfully', 'equipment_id': new_equipment.equipment_id})
+
+if __name__ == '__main__':
+    db.create_all()
+    app.run(debug=True)

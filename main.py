@@ -3,8 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import date, datetime
 
 app = Flask(__name__)
-
-# Database Configuration (Replace with your actual database credentials)
+# Get the database URI from the environment variable
+database_uri = os.environ.get('DATABASE_URL')
 # For SQLite (local development)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 # For MySQL (production)

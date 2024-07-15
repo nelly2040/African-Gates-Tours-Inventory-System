@@ -6,7 +6,8 @@ app = Flask(__name__)
 # Get the database URI from the environment variable
 database_uri = os.environ.get('DATABASE_URL')
 # For SQLite (local development)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://u5v8nc9inuc818:pf8a9ba4a9b790d5ab65f95a2407af559d7d2d9e7498a79da94e2494a03b88a04@cat670aihdrkt1.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com:5432/d4nau36g23bn3b
+'
 # For MySQL (production)
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:2040245800nm,.@localhost/african_gates_tours'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False

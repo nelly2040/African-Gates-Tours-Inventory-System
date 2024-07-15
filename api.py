@@ -8,7 +8,7 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
-        self.wfile.write(bytes("<h1>Tours Data</h1>", "utf-8"))
+        self.wfile.write(bytes("<h1>African Gates Tours</h1>", "utf-8"))
 
 httpd = HTTPServer(('', PORT), SimpleRequestHandler)
 print(f"Serving at http://localhost:{3306}")

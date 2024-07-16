@@ -2,7 +2,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 import sqlite3
 
-PORT = 5000
+PORT = 5001
 
 class SimpleRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):

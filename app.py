@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Adventure Tours Invoice</title>
+    <title>African Gates Tours Invoice</title>
     <style>
         /* Basic Styling - Customize as needed */
         body {
@@ -36,7 +36,7 @@
 <body>
 
     <div class="invoice-header">
-        <h1>Adventure Tours</h1>
+        <h1>African Gates Tours</h1>
         <p>Address: [Your Company Address]</p>
         <p>Phone: [Your Company Phone]</p>
         <p>Email: [Your Company Email]</p>
